@@ -10,5 +10,5 @@
   "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "archive" }],
   // Leave empty to serve audio/artwork through the Worker.
   // Set to your public R2 address (e.g. "https://media.swood-noise.com") to serve them straight from R2.
-  "vars": { "MEDIA_BASE": "" }
+  "vars": { "MEDIA_BASE": "https://media.swood-noise.com" }
 }
