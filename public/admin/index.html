@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARCHIVE — Admin</title><meta name="robots" content="noindex"><link rel="stylesheet" href="/styles.css">
+<style>
+main{max-width:900px}.admin-section{padding:30px 0 44px;border-bottom:1px solid var(--line)}form,.batch-fields{display:grid;gap:18px;margin:24px 0 20px}label{display:grid;gap:6px;font:10px "DM Mono",monospace;letter-spacing:.06em;color:var(--gray)}input,select{border:0;border-bottom:1px solid var(--black);background:transparent;padding:8px 0;font:14px "Space Grotesk",sans-serif;color:var(--black);border-radius:0;min-width:0}input[type=file]{font-size:12px}input[type=checkbox]{min-width:auto;accent-color:var(--black)}.row{display:grid;grid-template-columns:1fr 1fr;gap:18px}.go,.secondary{border:1px solid var(--black);background:var(--black);color:var(--white);padding:14px;font:11px "DM Mono",monospace;letter-spacing:.06em;cursor:pointer}.secondary{background:transparent;color:var(--black)}.actions{display:flex;gap:10px;flex-wrap:wrap}.small-note{font:11px/1.6 "DM Mono",monospace;color:var(--gray)}#msg,#msg2,#batch-msg{font:11px/1.6 "DM Mono",monospace;min-height:1em}.library-item{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:14px;border-bottom:1px solid var(--line);padding:14px 0;font-size:13px}.library-title{font-size:14px}.library-meta{font:10px/1.6 "DM Mono",monospace;color:var(--gray);margin-top:4px}.item-actions{display:flex;gap:14px;align-items:center}.text-button{margin:0}.danger{color:#8b1717}.check-row{display:flex;align-items:center;gap:8px;font:10px "DM Mono",monospace;color:var(--gray)}.batch-count{font:11px "DM Mono",monospace;color:var(--gray)}@media(max-width:600px){.row{grid-template-columns:1fr}.library-item{grid-template-columns:1fr}.item-actions{justify-content:flex-start}}
+</style></head>
+<body>
+<header class="topbar"><a class="wordmark" href="/">ARCHIVE<span>.</span></a><div class="top-meta"><span>ADMIN</span></div></header>
+<main>
+  <section class="intro" style="padding:56px 0 20px"><p class="eyebrow">PRIVATE CONTROL PANEL</p><h1 style="font-size:48px">Manage library.</h1><p class="small-note">Enter your admin password to upload, edit, or delete tracks. Keep it private.</p></section>
+
+  <section class="admin-section">
+    <h2 class="eyebrow" id="form-heading">ADD A TRACK</h2>
+    <form id="f">
+      <label>ADMIN PASSWORD *<input id="pw" type="password" autocomplete="current-password" required></label>
+      <label>TITLE *<input name="title" id="track-title" required></label>
+      <div class="row"><label>ARTIST<input name="artist" id="track-artist"></label><label>GENRE<input name="genre" id="track-genre"></label></div>
+      <div class="row"><label>BPM<input name="bpm" id="track-bpm" type="number" min="1" max="400"></label><label>KEY (E.G. F MINOR)<input name="key" id="track-key"></label></div>
+      <label>RELEASE DATE<input name="date" id="track-date" type="date"></label>
+      <label id="audio-label">AUDIO FILE * (MP3, WAV, FLAC, M4A, AAC, OGG — UP TO 100 MB)<input name="audio" id="track-audio" type="file" accept="audio/*" required></label>
+      <label>ARTWORK (JPG, PNG, WEBP, GIF) — OPTIONAL WHEN EDITING<input name="artwork" id="track-artwork" type="file" accept="image/*"></label>
+      <label class="check-row" id="remove-art-wrap" hidden><input type="checkbox" id="remove-art"> REMOVE EXISTING ARTWORK</label>
+      <div class="actions"><button class="go" id="save-track" type="submit">UPLOAD TRACK</button><button class="secondary" id="cancel-edit" type="button" hidden>CANCEL EDIT</button></div>
+      <p id="msg" role="status"></p>
+    </form>
+  </section>
+
+  <section class="admin-section">
+    <h2 class="eyebrow">BATCH UPLOAD</h2>
+    <p class="small-note">Select multiple audio files at once. Each filename becomes its track title. Shared artist, genre, and date will be applied to every file. Optional artwork is matched by filename, e.g. “LOCA.mp3” with “LOCA.jpg”. Files are uploaded one at a time so progress and errors are visible.</p>
+    <form id="batch-form">
+      <label>ADMIN PASSWORD *<input id="batch-pw" type="password" autocomplete="current-password" required></label>
+      <label>AUDIO FILES * — SELECT MULTIPLE<input id="batch-audio" type="file" accept="audio/*,.mp3,.wav,.flac,.m4a,.aac,.ogg" multiple required></label>
+      <label>ARTWORK FILES — OPTIONAL, MATCH BY FILENAME<input id="batch-artwork" type="file" accept="image/*,.jpg,.jpeg,.png,.webp,.gif" multiple></label>
+      <div class="row"><label>ARTIST FOR ALL TRACKS<input id="batch-artist"></label><label>GENRE FOR ALL TRACKS<input id="batch-genre"></label></div>
+      <label>RELEASE DATE FOR ALL TRACKS<input id="batch-date" type="date"></label>
+      <div class="actions"><button class="go" type="submit">UPLOAD SELECTED TRACKS</button><span class="batch-count" id="batch-count"></span></div>
+      <p id="batch-msg" role="status"></p>
+    </form>
+  </section>
+
+  <section class="admin-section">
+    <h2 class="eyebrow">SITE IMAGES</h2>
+    <div style="display:grid;gap:18px;margin:20px 0">
+      <div class="row"><label>LOGO (REPLACES “ARCHIVE.” AT THE TOP)<input id="logo" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label><label>BANNER (REPLACES THE INTRO TEXT)<input id="banner" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label></div>
+      <button class="go" id="site-go" type="button">UPLOAD IMAGES</button>
+      <div class="row"><button class="text-button" data-rm="logo" type="button" style="margin:0;text-align:left">REMOVE LOGO</button><button class="text-button" data-rm="banner" type="button" style="margin:0;text-align:left">REMOVE BANNER</button></div>
+      <p id="msg2" role="status"></p>
+    </div>
+  </section>
+
+  <section class="admin-section" style="border-bottom:0">
+    <h2 class="eyebrow">LIBRARY <span id="library-count"></span></h2>
+    <p class="small-note">Choose EDIT to load a track into the form above. Save changes to update the public library. You can replace audio/artwork or keep the existing files.</p>
+    <div id="list" aria-live="polite"></div>
+  </section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+try{$("pw").value=sessionStorage.getItem("pw")||"";$("batch-pw").value=sessionStorage.getItem("pw")||""}catch{}
+let editingId=null, tracks=[];
+const setStatus=(id,text)=>$(id).textContent=text;
+function extension(file){return file.name.split(".").pop().toLowerCase()}
+function stem(name){return name.replace(/\.[^.]+$/,'').trim().toLowerCase()}
+function fileTitle(name){return name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim()}
+function put(kind,file,extra="",statusId="msg"){
+ return new Promise((ok,no)=>{
+  const ext=extension(file),x=new XMLHttpRequest();
+  x.open("PUT",`/api/upload?kind=${encodeURIComponent(kind)}&ext=${encodeURIComponent(ext)}${extra}`);
+  x.setRequestHeader("x-admin-password",$("pw").value||$("batch-pw").value);
+  x.upload.onprogress=e=>{if(e.lengthComputable)setStatus(statusId,`UPLOADING ${file.name} — ${Math.round(e.loaded/e.total*100)}%`)};
+  x.onload=()=>{let j={};try{j=JSON.parse(x.responseText)}catch{}x.status>=200&&x.status<300?ok(j.key):no(new Error(j.error||`Upload failed (${x.status})`))};
+  x.onerror=()=>no(new Error("Network error while uploading "+file.name));x.send(file);
+ });
+}
+function authHeaders(){return {"x-admin-password":$("pw").value,"content-type":"application/json"}}
+function resetEditor(){editingId=null;$('f').reset();$('pw').value=(sessionStorage.getItem('pw')||'');$('form-heading').textContent='ADD A TRACK';$('save-track').textContent='UPLOAD TRACK';$('track-audio').required=true;$('audio-label').firstChild.textContent='AUDIO FILE * (MP3, WAV, FLAC, M4A, AAC, OGG — UP TO 100 MB)';$('cancel-edit').hidden=true;$('remove-art-wrap').hidden=true;$('remove-art').checked=false;setStatus('msg','');}
+function startEdit(id){const t=tracks.find(x=>Number(x.id)===Number(id));if(!t)return;editingId=t.id;$('form-heading').textContent='EDIT TRACK';$('track-title').value=t.title||'';$('track-artist').value=t.artist||'';$('track-genre').value=t.genre||'';$('track-bpm').value=t.bpm||'';$('track-key').value=t.key||'';$('track-date').value=t.date||'';$('track-audio').value='';$('track-audio').required=false;$('track-artwork').value='';$('remove-art').checked=false;$('remove-art-wrap').hidden=!t.artwork;$('save-track').textContent='SAVE CHANGES';$('cancel-edit').hidden=false;setStatus('msg',`EDITING: ${t.title.toUpperCase()} — LEAVE AUDIO/ARTWORK EMPTY TO KEEP THE CURRENT FILES.`);window.scrollTo({top:0,behavior:'smooth'});}
+async function load(){
+ try{const r=await fetch('/api/tracks',{cache:'no-store'});if(!r.ok)throw new Error();tracks=await r.json();
+ $('library-count').textContent=`(${tracks.length})`;
+ $('list').innerHTML=tracks.map(t=>`<div class="library-item"><div><div class="library-title">${esc(t.title)}${t.artist?' — '+esc(t.artist):''}</div><div class="library-meta">${esc(t.genre||'NO GENRE')} · ${esc(t.bpm||'—')} BPM · ${esc(t.key||'—')} · ${esc(t.date||'NO DATE')}</div></div><div class="item-actions"><button class="text-button" type="button" data-edit="${esc(t.id)}">EDIT</button><button class="text-button danger" type="button" data-delete="${esc(t.id)}">DELETE</button></div></div>`).join('')||'<p class="small-note">NO TRACKS YET.</p>';
+ }catch{$('list').innerHTML='<p class="small-note">COULD NOT LOAD TRACKS. CHECK YOUR CONNECTION AND ADMIN PASSWORD, THEN REFRESH.</p>';}
+}
+$('f').addEventListener('submit',async e=>{
+ e.preventDefault();const wasEditing=editingId!==null;const f=e.target,d=new FormData(f),pw=$('pw').value;setStatus('msg',wasEditing?'SAVING CHANGES…':'PREPARING UPLOAD…');
+ try{
+  try{sessionStorage.setItem('pw',pw)}catch{}
+  const audioFile=d.get('audio'),artFile=d.get('artwork');let audioKey,artKey;
+  if(audioFile&&audioFile.size)audioKey=await put('audio',audioFile,'','msg');
+  if(artFile&&artFile.size)artKey=await put('art',artFile,'','msg');
+  const body={title:d.get('title'),artist:d.get('artist'),genre:d.get('genre'),bpm:d.get('bpm'),key:d.get('key'),date:d.get('date')};
+  if(audioKey)body.audio=audioKey;if(artKey)body.artwork=artKey;if(editingId&&$('remove-art').checked)body.removeArtwork=true;
+  const url=wasEditing?`/api/tracks/${editingId}`:'/api/tracks';
+  const r=await fetch(url,{method:wasEditing?'PATCH':'POST',headers:authHeaders(),body:JSON.stringify(body)});const j=await r.json();if(!r.ok)throw new Error(j.error||'Save failed');
+  const name=j.title||body.title;resetEditor();$('pw').value=pw;$('batch-pw').value=pw;setStatus('msg',`${wasEditing?'SAVED':'UPLOADED'}: ${String(name).toUpperCase()}`);await load();
+ }catch(err){setStatus('msg',String(err.message||err).toUpperCase());}
+});
+$('cancel-edit').addEventListener('click',resetEditor);
+$('list').addEventListener('click',async e=>{
+ const edit=e.target.closest('[data-edit]');if(edit){startEdit(edit.dataset.edit);return;}
+ const del=e.target.closest('[data-delete]');if(!del)return;const id=del.dataset.delete;const t=tracks.find(x=>String(x.id)===String(id));if(!confirm(`Delete “${t?.title||'this track'}” and its stored audio/artwork?`))return;
+ try{const r=await fetch('/api/tracks/'+id,{method:'DELETE',headers:{'x-admin-password':$('pw').value}});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Delete failed');setStatus('msg','TRACK DELETED.');await load();}catch(err){setStatus('msg',String(err.message||err).toUpperCase());}
+});
+$('batch-form').addEventListener('submit',async e=>{
+ e.preventDefault();const files=[...$('batch-audio').files],artFiles=[...$('batch-artwork').files];if(!files.length){setStatus('batch-msg','CHOOSE AT LEAST ONE AUDIO FILE.');return;}
+ const allowed=['mp3','wav','flac','m4a','aac','ogg'];const bad=files.filter(f=>!allowed.includes(extension(f)));if(bad.length){setStatus('batch-msg','UNSUPPORTED AUDIO FORMAT: '+bad.map(f=>f.name).join(', '));return;}
+ const pw=$('batch-pw').value;$('pw').value=pw;try{sessionStorage.setItem('pw',pw)}catch{}
+ const date=$('batch-date').value||new Date().toISOString().slice(0,10),artist=$('batch-artist').value.trim(),genre=$('batch-genre').value.trim();let done=0,failed=[];$('batch-count').textContent=`0 / ${files.length}`;setStatus('batch-msg','STARTING BATCH UPLOAD…');
+ for(const file of files){
+  try{
+   setStatus('batch-msg',`TRACK ${done+1} OF ${files.length}: ${file.name}`);
+   const audio=await put('audio',file,'','batch-msg');let artwork='';const match=artFiles.find(a=>stem(a.name)===stem(file.name));if(match)artwork=await put('art',match,'','batch-msg');
+   const body={title:fileTitle(file.name),artist,genre,bpm:'',key:'',date,audio,artwork};
+   const r=await fetch('/api/tracks',{method:'POST',headers:{'x-admin-password':pw,'content-type':'application/json'},body:JSON.stringify(body)});const j=await r.json();if(!r.ok)throw new Error(j.error||'Could not save track');done++;$('batch-count').textContent=`${done} / ${files.length}`;
+  }catch(err){failed.push(`${file.name}: ${err.message||err}`);$('batch-count').textContent=`${done} / ${files.length}`;}
+ }
+ $('batch-audio').value='';$('batch-artwork').value='';await load();
+ setStatus('batch-msg',failed.length?`FINISHED WITH ${failed.length} ERROR(S). UPLOADED ${done} OF ${files.length}. ${failed.join(' | ')}`:`SUCCESS — UPLOADED ALL ${done} TRACKS.`);
+});
+$('site-go').addEventListener('click',async()=>{try{let n=0;for(const k of ['logo','banner']){const f=$(k).files[0];if(f){await put('site',f,'&name='+k,'msg2');n++;}}setStatus('msg2',n?'SAVED — REFRESH THE SITE TO SEE IT.':'CHOOSE AN IMAGE FIRST.');}catch(err){setStatus('msg2',String(err.message||err).toUpperCase());}});
+document.querySelectorAll('[data-rm]').forEach(b=>b.addEventListener('click',async()=>{try{const r=await fetch('/api/site/'+b.dataset.rm,{method:'DELETE',headers:{'x-admin-password':$('pw').value}});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Remove failed');setStatus('msg2','REMOVED.');}catch(err){setStatus('msg2',String(err.message||err).toUpperCase());}}));
+$('batch-date').value=new Date().toISOString().slice(0,10);load();
+</script>
+</body></html>
