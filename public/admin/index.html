@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARCHIVE — Admin</title><meta name="robots" content="noindex"><link rel="stylesheet" href="/styles.css">
+<style>main{max-width:720px}form{display:grid;gap:18px;margin:28px 0 48px}label{display:grid;gap:6px;font:10px "DM Mono",monospace;letter-spacing:.06em;color:var(--gray)}
+input{border:0;border-bottom:1px solid var(--black);background:transparent;padding:8px 0;font:14px "Space Grotesk",sans-serif;color:var(--black);border-radius:0}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:18px}.go{border:1px solid var(--black);background:var(--black);color:var(--white);padding:14px;font:11px "DM Mono",monospace;letter-spacing:.06em;cursor:pointer}
+#msg{font:11px "DM Mono",monospace}ul{list-style:none;padding:0}li{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding:12px 0;font-size:14px}li .text-button{margin:0}</style></head>
+<body>
+<header class="topbar"><a class="wordmark" href="/">ARCHIVE<span>.</span></a><div class="top-meta"><span>ADMIN</span></div></header>
+<main>
+  <section class="intro" style="padding:56px 0 40px"><p class="eyebrow">UPLOAD</p><h1 style="font-size:48px">New track.</h1>
+  <form id="f">
+    <label>ADMIN PASSWORD *<input id="pw" type="password" autocomplete="current-password" required></label>
+    <label>TITLE *<input name="title" required></label>
+    <div class="row"><label>ARTIST<input name="artist"></label><label>GENRE<input name="genre"></label></div>
+    <div class="row"><label>BPM<input name="bpm" type="number" min="1" max="400"></label><label>KEY (E.G. F MINOR)<input name="key"></label></div>
+    <label>RELEASE DATE<input name="date" type="date"></label>
+    <label>AUDIO FILE * (MP3, WAV, FLAC, M4A, AAC, OGG — UP TO 100 MB)<input name="audio" type="file" accept="audio/*" required></label>
+    <label>ARTWORK (JPG, PNG, WEBP, GIF)<input name="artwork" type="file" accept="image/*"></label>
+    <button class="go" type="submit">UPLOAD TRACK</button><p id="msg" role="status"></p>
+  </form></section>
+  <h2 class="eyebrow">SITE IMAGES</h2>
+  <div style="display:grid;gap:18px;margin:20px 0 48px">
+    <div class="row">
+      <label>LOGO (REPLACES “ARCHIVE.” AT THE TOP)<input id="logo" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+      <label>BANNER (REPLACES THE INTRO TEXT)<input id="banner" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+    </div>
+    <button class="go" id="site-go" type="button">UPLOAD IMAGES</button>
+    <div class="row"><button class="text-button" data-rm="logo" type="button" style="margin:0;text-align:left">REMOVE LOGO</button><button class="text-button" data-rm="banner" type="button" style="margin:0;text-align:left">REMOVE BANNER</button></div>
+    <p id="msg2" role="status" style="font:11px 'DM Mono',monospace"></p>
+  </div>
+  <h2 class="eyebrow">LIBRARY</h2><ul id="list"></ul>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+try{$("pw").value=sessionStorage.getItem("pw")||""}catch{}
+let out=$("msg");
+const put=(kind,file,extra="")=>new Promise((ok,no)=>{
+  const ext=file.name.split(".").pop().toLowerCase(),x=new XMLHttpRequest();
+  x.open("PUT",`/api/upload?kind=${kind}&ext=${encodeURIComponent(ext)}${extra}`);x.setRequestHeader("x-admin-password",$("pw").value);
+  x.upload.onprogress=e=>{if(e.lengthComputable)out.textContent=`UPLOADING ${kind.toUpperCase()} ${Math.round(e.loaded/e.total*100)}%`};
+  x.onload=()=>{let j={};try{j=JSON.parse(x.responseText)}catch{}x.status===200?ok(j.key):no(new Error(j.error||"Upload failed ("+x.status+")"))};
+  x.onerror=()=>no(new Error("Network error"));x.send(file);
+});
+async function load(){
+  const t=await (await fetch("/api/tracks")).json();
+  $("list").innerHTML=t.map(x=>`<li><span>${esc(x.title)} — ${esc(x.artist)}</span><button class="text-button" type="button" data-id="${x.id}">DELETE</button></li>`).join("")||"<li>NO TRACKS YET</li>";
+}
+$("f").addEventListener("submit",async e=>{
+  e.preventDefault();out=$("msg");const f=e.target,d=new FormData(f),pw=$("pw").value;
+  try{
+    const audio=await put("audio",d.get("audio")),art=d.get("artwork");
+    const artwork=art&&art.size?await put("art",art):"";
+    $("msg").textContent="SAVING…";
+    const body=Object.fromEntries([...d].filter(([k])=>!["audio","artwork"].includes(k)));
+    const r=await fetch("/api/tracks",{method:"POST",headers:{"x-admin-password":pw,"content-type":"application/json"},body:JSON.stringify({...body,audio,artwork})});
+    const j=await r.json();if(!r.ok)throw new Error(j.error);
+    try{sessionStorage.setItem("pw",pw)}catch{}f.reset();$("pw").value=pw;$("msg").textContent="UPLOADED: "+j.title.toUpperCase();load();
+  }catch(err){$("msg").textContent=String(err.message).toUpperCase();}
+});
+$("list").addEventListener("click",async e=>{
+  const id=e.target.dataset.id;if(!id||!confirm("Delete this track and its files?"))return;
+  const r=await fetch("/api/tracks/"+id,{method:"DELETE",headers:{"x-admin-password":$("pw").value}});
+  if(!r.ok)$("msg").textContent="WRONG PASSWORD OR DELETE FAILED.";load();
+});
+load();
+$("site-go").addEventListener("click",async()=>{
+  out=$("msg2");
+  try{let n=0;for(const k of ["logo","banner"]){const f=$(k).files[0];if(f){await put("site",f,"&name="+k);n++;}}
+    out.textContent=n?"SAVED — REFRESH THE SITE TO SEE IT.":"CHOOSE AN IMAGE FIRST.";
+  }catch(err){out.textContent=String(err.message).toUpperCase();}
+});
+document.querySelectorAll("[data-rm]").forEach(b=>b.addEventListener("click",async()=>{
+  const r=await fetch("/api/site/"+b.dataset.rm,{method:"DELETE",headers:{"x-admin-password":$("pw").value}});
+  $("msg2").textContent=r.ok?"REMOVED.":"WRONG PASSWORD OR REMOVE FAILED.";
+}));
+</script></body></html>
