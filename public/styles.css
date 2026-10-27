@@ -43,7 +43,7 @@ h1{font-size:clamp(48px,8.5vw,118px);line-height:.92;letter-spacing:-.085em;marg
 .player-art img{width:100%;height:100%;object-fit:cover}
 .player-track{display:grid;gap:7px;min-width:0}.player-track strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.player-track span{font-size:9px;color:var(--gray)}
 .player-main{min-width:0;display:flex;align-items:center;gap:18px}.player-controls{display:flex;align-items:center;gap:14px;flex:none}
-.icon-button,.play-button{border:0;background:transparent;cursor:pointer}.icon-button{font-size:13px}.play-button{border:1px solid var(--black);border-radius:50%;width:34px;height:34px;font-size:12px;display:grid;place-items:center;padding:0}.play-button svg{display:block;width:16px;height:16px;fill:currentColor}.play-button:hover{background:var(--black);color:var(--white)}
+.icon-button,.play-button{border:0;background:transparent;cursor:pointer}.icon-button{font-size:13px;display:grid;place-items:center;width:24px;height:30px;padding:0}.icon-button svg{display:block;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.play-button{border:1px solid var(--black);border-radius:50%;width:34px;height:34px;font-size:12px;display:grid;place-items:center;padding:0}.play-button svg{display:block;width:16px;height:16px;fill:currentColor}.play-button:hover{background:var(--black);color:var(--white)}
 .timeline{flex:1;min-width:0;display:flex;align-items:center;gap:10px;font:9px "DM Mono",monospace;color:var(--gray)}
 .timeline input{width:100%;accent-color:var(--black);min-width:0}
 .player-meta{display:flex;justify-content:flex-end;gap:18px;font-size:9px;color:var(--gray)}
@@ -53,11 +53,13 @@ h1{font-size:clamp(48px,8.5vw,118px);line-height:.92;letter-spacing:-.085em;marg
 [aria-sort=ascending] .sort-btn::after{content:" ↑"}[aria-sort=descending] .sort-btn::after{content:" ↓"}
 .row-dl{display:grid;place-items:center;border:1px solid var(--black);width:30px;height:30px;border-radius:50%;font-size:12px;grid-column:8}.row-dl:hover{background:var(--black);color:var(--white)}
 .logo-img{display:block;height:44px;width:auto}
-.banner{display:block;width:100%;height:auto;max-height:420px;object-fit:cover}.banner[hidden]{display:none}
-.has-banner{padding:40px 0}.has-banner .eyebrow,.has-banner .intro-copy{display:none}.has-banner h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.banner{display:block;width:100%;height:auto;max-height:260px;object-fit:cover}.banner[hidden]{display:none}
+.has-banner{padding:0;border:0}.has-banner .eyebrow,.has-banner .intro-copy{display:none}.has-banner h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+body:has(.has-banner) .topbar{border-bottom:0}
 @media(max-width:760px){
  body{padding-bottom:135px}.logo-img{height:34px}.topbar{height:64px;padding:0 20px}.top-meta{gap:10px;font-size:8px}.top-meta span:first-child{display:none}
  main{padding:0 20px}.intro{padding:70px 0 55px}.intro-copy{font-size:13px}
+ .has-banner{margin-left:-20px;margin-right:-20px;padding:0;border:0}.has-banner .banner{width:100%;max-height:none;height:auto;object-fit:contain}
  .section-heading{align-items:flex-start;flex-direction:column}.search-wrap,.search-wrap input{width:100%}
  .filters{gap:14px;flex-wrap:wrap}.filters label{flex:1;min-width:125px}.filters select{min-width:0;width:100%}
  .track-header{grid-template-columns:28px 30px minmax(120px,1fr) 54px 30px;gap:8px}.track-header span:nth-child(4),.track-header span:nth-child(6),.track-header span:nth-child(7){display:none}
