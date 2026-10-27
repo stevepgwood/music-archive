@@ -4,8 +4,7 @@ const writeTracks=(env,t)=>env.BUCKET.put("tracks.json",JSON.stringify(t),{httpM
 
 // Admin check: the password arrives in the x-admin-password header and is compared in constant time.
 async function isAdmin(request,env){
-  if(!env.ADMIN_PASSWORD)return false;
-  const enc=new TextEncoder(),h=s=>crypto.subtle.digest("SHA-256",enc.encode(s));
+  const enc=new TextEncoder(),h=s=>crypto.subtle.digest("SHA-256",enc.encode(String(s).trim()));
   const [a,b]=await Promise.all([h(request.headers.get("x-admin-password")||""),h(env.ADMIN_PASSWORD)]);
   return crypto.subtle.timingSafeEqual(a,b);
 }
@@ -65,6 +64,7 @@ export default {
     if(path==="/api/tracks"&&m==="GET")return json(await readTracks(env),200,{"cache-control":"no-cache"});
     if(path.startsWith("/media/")&&m==="GET")return media(request,env,path.slice(7));
     if(path.startsWith("/api/")){
+      if(!env.ADMIN_PASSWORD)return json({error:"The ADMIN_PASSWORD secret is not set on this Worker."},500);
       if(!await isAdmin(request,env))return json({error:"Wrong password."},401);
       if(path==="/api/upload"&&m==="PUT")return upload(request,env,url);
       if(path==="/api/tracks"&&m==="POST")return addTrack(request,env);
