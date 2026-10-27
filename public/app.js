@@ -22,6 +22,13 @@ function keyRank(t){
 }
 const SORTERS={title:t=>t.title.toLowerCase(),genre:t=>(t.genre||"").toLowerCase(),bpm:t=>t.bpm||0,key:keyRank,date:t=>t.date||""};
 
+function iconMarkup(kind){
+  return kind==="pause"
+    ? '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 5h4v14H7zM15 5h4v14h-4z"/></svg>'
+    : '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5 20 12 8 19Z"/></svg>';
+}
+function setPlayIcon(kind){const b=$("play");b.innerHTML=iconMarkup(kind);b.setAttribute("aria-label",kind==="pause"?"Pause":"Play");}
+setPlayIcon("play");
 function formatDate(date){if(!date)return "—";const [y,m,d]=date.split("-");return `${m}.${d}.${y.slice(2)}`;}
 function formatTime(seconds){if(!Number.isFinite(seconds))return "0:00";const m=Math.floor(seconds/60);const s=Math.floor(seconds%60).toString().padStart(2,"0");return `${m}:${s}`;}
 function coverMarkup(track, cls="cover"){return `<div class="${cls}">${track.artwork ? `<img src="${escapeAttr(track.artwork)}" alt="${escapeAttr(track.title)} artwork">` : escapeHtml(track.title.slice(0,2).toUpperCase())}</div>`;}
@@ -43,13 +50,13 @@ function render(){
   $("track-list").innerHTML=visibleTracks.map((t,i)=>`
     <div class="track-row ${t.id===currentTrackId?"active":""}" role="row" tabindex="0" data-id="${t.id}" aria-label="Play ${escapeAttr(t.title)}">
       <span class="track-no">${String(i+1).padStart(2,"0")}</span>
-      ${t.download?`<a class="row-dl" href="${escapeAttr(t.download)}" download aria-label="Download ${escapeAttr(t.title)}" title="Download">↓</a>`:"<span></span>"}
+      <button class="row-play" type="button" data-play="${t.id}" aria-label="${t.id===currentTrackId&&!audio.paused?"Pause":"Play"} ${escapeAttr(t.title)}">${iconMarkup(t.id===currentTrackId&&!audio.paused?"pause":"play")}</button>
       <div class="track-title-wrap">${coverMarkup(t)}<div style="min-width:0"><div class="track-title">${escapeHtml(t.title)}</div><div class="track-artist">${escapeHtml(t.artist)}</div></div></div>
       <span class="track-genre">${escapeHtml(t.genre)}</span>
       <span class="track-meta">${t.bpm||"—"}</span>
       <span class="track-meta track-key">${escapeHtml(t.key||"—")}</span>
       <span class="track-meta track-date">${formatDate(t.date)}</span>
-      <button class="row-play" type="button" data-play="${t.id}" aria-label="Play ${escapeAttr(t.title)}">▶</button>
+      ${t.download?`<a class="row-dl" href="${escapeAttr(t.download)}" download aria-label="Download ${escapeAttr(t.title)}" title="Download">↓</a>`:"<span></span>"}
     </div>`).join("");
   $("empty-state").hidden=visibleTracks.length!==0;
 }
@@ -66,13 +73,18 @@ function loadTrack(id,autoplay=true){
     if(audio.src!==new URL(track.audio,location.href).href)audio.src=track.audio;
     if(autoplay)audio.play().catch(()=>{});
   }else{
-    audio.pause();$("play").textContent="▶";
+    audio.pause();setPlayIcon("play");
     $("current-time").textContent="0:00";$("duration").textContent="0:00";$("progress").value=0;
   }
 }
 $("track-list").addEventListener("click",e=>{
   if(e.target.closest(".row-dl"))return;const playButton=e.target.closest("[data-play]");const row=e.target.closest(".track-row");
-  if(playButton){loadTrack(playButton.dataset.play);return;}
+  if(playButton){
+    const id=Number(playButton.dataset.play);
+    if(id===currentTrackId&&audio.src){if(audio.paused)audio.play().catch(()=>{});else audio.pause();}
+    else loadTrack(id);
+    return;
+  }
   if(row)loadTrack(row.dataset.id);
 });
 $("track-list").addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.classList.contains("track-row")){e.preventDefault();loadTrack(e.target.dataset.id);}});
@@ -81,8 +93,8 @@ $("clear-filters").addEventListener("click",()=>{$("search").value="";$("genre-f
 $("play").addEventListener("click",()=>{if(!currentTrackId){if(visibleTracks[0])loadTrack(visibleTracks[0].id);return;}if(!audio.src){return;}if(audio.paused)audio.play().catch(()=>{});else audio.pause();});
 $("prev").addEventListener("click",()=>stepTrack(-1));$("next").addEventListener("click",()=>stepTrack(1));
 function stepTrack(direction){if(!visibleTracks.length)return;let index=visibleTracks.findIndex(t=>t.id===currentTrackId);index=index<0?0:(index+direction+visibleTracks.length)%visibleTracks.length;loadTrack(visibleTracks[index].id);}
-audio.addEventListener("play",()=>$("play").textContent="Ⅱ");
-audio.addEventListener("pause",()=>$("play").textContent="▶");
+audio.addEventListener("play",()=>{setPlayIcon("pause");render();});
+audio.addEventListener("pause",()=>{setPlayIcon("play");render();});
 audio.addEventListener("loadedmetadata",()=>{$("duration").textContent=formatTime(audio.duration);});
 audio.addEventListener("timeupdate",()=>{if(Number.isFinite(audio.duration)&&audio.duration>0){$("progress").value=(audio.currentTime/audio.duration)*100;$("current-time").textContent=formatTime(audio.currentTime);}});
 $("progress").addEventListener("input",()=>{if(Number.isFinite(audio.duration)&&audio.duration>0)audio.currentTime=(Number($("progress").value)/100)*audio.duration;});

@@ -34,7 +34,7 @@ h1{font-size:clamp(48px,8.5vw,118px);line-height:.92;letter-spacing:-.085em;marg
 .cover img{width:100%;height:100%;object-fit:cover}
 .track-title{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .track-artist{font:10px "DM Mono",monospace;color:var(--gray);margin-top:5px}
-.track-genre{font-size:11px}.row-play{border:1px solid var(--black);width:30px;height:30px;border-radius:50%;background:transparent;cursor:pointer;font-size:11px}
+.track-genre{font-size:11px}.row-play{border:1px solid var(--black);width:30px;height:30px;border-radius:50%;background:transparent;cursor:pointer;display:grid;place-items:center;padding:0}.row-play svg{display:block;width:14px;height:14px;fill:currentColor}.row-play:hover{background:var(--black);color:var(--white)}
 .empty-state{padding:38px 12px;font-size:11px}
 .demo-note{font-size:9px;color:var(--gray);margin-top:22px;line-height:1.6}
 .player{position:fixed;z-index:5;bottom:0;left:0;right:0;min-height:112px;background:var(--white);border-top:1px solid var(--black);padding:18px 5vw;display:grid;grid-template-columns:minmax(200px,1fr) minmax(240px,1.25fr) minmax(110px,.5fr);align-items:center;gap:28px}
@@ -43,7 +43,7 @@ h1{font-size:clamp(48px,8.5vw,118px);line-height:.92;letter-spacing:-.085em;marg
 .player-art img{width:100%;height:100%;object-fit:cover}
 .player-track{display:grid;gap:7px;min-width:0}.player-track strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.player-track span{font-size:9px;color:var(--gray)}
 .player-main{min-width:0;display:flex;align-items:center;gap:18px}.player-controls{display:flex;align-items:center;gap:14px;flex:none}
-.icon-button,.play-button{border:0;background:transparent;cursor:pointer}.icon-button{font-size:13px}.play-button{border:1px solid var(--black);border-radius:50%;width:34px;height:34px;font-size:12px}
+.icon-button,.play-button{border:0;background:transparent;cursor:pointer}.icon-button{font-size:13px}.play-button{border:1px solid var(--black);border-radius:50%;width:34px;height:34px;font-size:12px;display:grid;place-items:center;padding:0}.play-button svg{display:block;width:16px;height:16px;fill:currentColor}.play-button:hover{background:var(--black);color:var(--white)}
 .timeline{flex:1;min-width:0;display:flex;align-items:center;gap:10px;font:9px "DM Mono",monospace;color:var(--gray)}
 .timeline input{width:100%;accent-color:var(--black);min-width:0}
 .player-meta{display:flex;justify-content:flex-end;gap:18px;font-size:9px;color:var(--gray)}
@@ -51,7 +51,7 @@ h1{font-size:clamp(48px,8.5vw,118px);line-height:.92;letter-spacing:-.085em;marg
 .sort-btn{border:0;background:transparent;padding:0;font:inherit;letter-spacing:inherit;color:inherit;cursor:pointer;text-align:left}
 .sort-btn:hover,[aria-sort=ascending] .sort-btn,[aria-sort=descending] .sort-btn{color:var(--black)}
 [aria-sort=ascending] .sort-btn::after{content:" ↑"}[aria-sort=descending] .sort-btn::after{content:" ↓"}
-.row-dl{display:grid;place-items:center;border:1px solid var(--black);width:30px;height:30px;border-radius:50%;font-size:12px}.row-dl:hover{background:var(--black);color:var(--white)}
+.row-dl{display:grid;place-items:center;border:1px solid var(--black);width:30px;height:30px;border-radius:50%;font-size:12px;grid-column:8}.row-dl:hover{background:var(--black);color:var(--white)}
 .logo-img{display:block;height:44px;width:auto}
 .banner{display:block;width:100%;height:auto;max-height:420px;object-fit:cover}.banner[hidden]{display:none}
 .has-banner{padding:40px 0}.has-banner .eyebrow,.has-banner .intro-copy{display:none}.has-banner h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
@@ -61,7 +61,7 @@ h1{font-size:clamp(48px,8.5vw,118px);line-height:.92;letter-spacing:-.085em;marg
  .section-heading{align-items:flex-start;flex-direction:column}.search-wrap,.search-wrap input{width:100%}
  .filters{gap:14px;flex-wrap:wrap}.filters label{flex:1;min-width:125px}.filters select{min-width:0;width:100%}
  .track-header{grid-template-columns:28px 30px minmax(120px,1fr) 54px 30px;gap:8px}.track-header span:nth-child(4),.track-header span:nth-child(6),.track-header span:nth-child(7){display:none}
- .track-row{grid-template-columns:28px 30px minmax(120px,1fr) 54px 30px;gap:8px;padding:10px 5px}.track-row .track-genre,.track-row .track-key,.track-row .track-date{display:none}
+ .track-row{grid-template-columns:28px 30px minmax(120px,1fr) 54px 30px;gap:8px;padding:10px 5px}.track-row .track-genre,.track-row .track-key,.track-row .track-date{display:none}.row-dl{grid-column:5}
  .cover{width:42px;height:42px;flex-basis:42px}.track-title{font-size:12px}
  .player{padding:12px 18px;grid-template-columns:1fr auto;gap:10px;min-height:120px}.now-playing{grid-column:1}.player-art{width:54px;height:54px;flex-basis:54px}.player-main{grid-column:1 / -1;grid-row:2}.player-controls{gap:6px}.player-main{gap:10px}.player-meta{grid-column:2;grid-row:1;display:none}
 }

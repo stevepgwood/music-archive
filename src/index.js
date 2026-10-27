@@ -60,28 +60,29 @@ async function addTrack(request,env){
   tracks.push(t);await writeTracks(env,tracks);return json(t);
 }
 
+
 async function updateTrack(request,env,id){
   const b=await request.json().catch(()=>({}));
-  const s=v=>String(v??"").trim();
   const tracks=await readTracks(env),t=tracks.find(x=>x.id===id);
-  if(!t)return json({error:"Track not found."},404);
-  if(!s(b.title))return json({error:"A track title is required."},400);
-  const valid=(k,p)=>typeof k==="string"&&k.startsWith(p)&&!k.includes("..")&&!k.includes("\\");
-  const next={...t,title:s(b.title),artist:s(b.artist),genre:s(b.genre),bpm:Number(b.bpm)||0,key:s(b.key),date:s(b.date)||t.date||new Date().toISOString().slice(0,10)};
-  if(Object.prototype.hasOwnProperty.call(b,"audio")){
-    if(!valid(b.audio,"audio/")||!await env.BUCKET.head(b.audio))return json({error:"The replacement audio file is invalid or missing."},400);
-    next.audio="/media/"+b.audio;
+  if(!t)return json({error:"Not found"},404);
+  const s=v=>String(v??"").trim();
+  const oldAudio=t.audio,oldArtwork=t.artwork;
+  if(b.audio!==undefined){
+    if(!/^audio\/[\w.-]+$/.test(b.audio)||!await env.BUCKET.head(b.audio))return json({error:"The replacement audio file is missing or invalid."},400);
+    t.audio="/media/"+b.audio;
   }
-  if(Object.prototype.hasOwnProperty.call(b,"artwork")){
-    if(b.artwork){if(!valid(b.artwork,"art/")||!await env.BUCKET.head(b.artwork))return json({error:"The replacement artwork file is invalid or missing."},400);next.artwork="/media/"+b.artwork;}
-    else next.artwork="";
-  }else if(b.removeArtwork===true){next.artwork="";}
-  const oldFiles=[t.audio,t.artwork].filter(Boolean).map(u=>u.replace(/^\/media\//,""));
-  const newFiles=[next.audio,next.artwork].filter(Boolean).map(u=>u.replace(/^\/media\//,""));
-  tracks[tracks.indexOf(t)]=next;
+  if(b.artwork!==undefined){
+    if(b.artwork&&!/^art\/[\w.-]+$/.test(b.artwork))return json({error:"Bad artwork file."},400);
+    if(b.artwork&&!await env.BUCKET.head(b.artwork))return json({error:"The replacement artwork file is missing."},400);
+    t.artwork=b.artwork?"/media/"+b.artwork:"";
+  }
+  for(const k of ["title","artist","genre","key","date"]){if(b[k]!==undefined)t[k]=s(b[k]);}
+  if(b.bpm!==undefined)t.bpm=Number(b.bpm)||0;
+  if(!t.title)return json({error:"A title is required."},400);
   await writeTracks(env,tracks);
-  for(const key of oldFiles)if(!newFiles.includes(key))await env.BUCKET.delete(key);
-  return json(next);
+  const used=new Set(tracks.flatMap(x=>[x.audio,x.artwork]).filter(Boolean).map(u=>u.replace("/media/","")));
+  for(const old of [oldAudio,oldArtwork])if(old&&old.startsWith("/media/")&&!used.has(old.slice(7)))await env.BUCKET.delete(old.slice(7));
+  return json(t);
 }
 
 async function removeTrack(env,id){
@@ -122,9 +123,9 @@ export default {
       if(!await isAdmin(request,env))return json({error:"Wrong password."},401);
       if(path==="/api/upload"&&m==="PUT")return upload(request,env,url);
       if(path==="/api/tracks"&&m==="POST")return addTrack(request,env);
-      const trackPath=/^\/api\/tracks\/(\d+)$/.exec(path);
-      if(trackPath&&m==="PATCH")return updateTrack(request,env,Number(trackPath[1]));
-      if(trackPath&&m==="DELETE")return removeTrack(env,Number(trackPath[1]));
+      const trackRoute=/^\/api\/tracks\/(\d+)$/.exec(path);
+      if(trackRoute&&m==="PUT")return updateTrack(request,env,Number(trackRoute[1]));
+      if(trackRoute&&m==="DELETE")return removeTrack(env,Number(trackRoute[1]));
       const rs=/^\/api\/site\/(logo|banner)$/.exec(path);
       if(rs&&m==="DELETE")return removeSite(env,rs[1]);
     }
