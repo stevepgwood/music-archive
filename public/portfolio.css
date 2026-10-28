@@ -11,3 +11,13 @@
 .home-page .home-portfolio-mark .hero-bottom{border-bottom:1px solid var(--ink);padding-bottom:18px;margin-top:0}
 .home-page .work-index{margin-top:0;border-top:0}
 @media(max-width:700px){.home-page .header-note{display:block;font-size:8px;letter-spacing:.04em}.home-page .hero{padding-bottom:0}.home-page .home-portfolio-mark .hero-bottom{padding-bottom:16px}.home-page .work-index{margin-top:0}}
+
+/* Graphic design image lightbox */
+.project-media img{cursor:zoom-in}
+.design-lightbox[hidden]{display:none}
+.design-lightbox{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:4vh 4vw;background:rgba(12,12,12,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);cursor:zoom-out}
+.design-lightbox img{display:block;max-width:92vw;max-height:92vh;width:auto;height:auto;object-fit:contain;box-shadow:0 12px 60px rgba(0,0,0,.28);cursor:zoom-out}
+.design-lightbox-close{position:absolute;top:18px;right:24px;width:42px;height:42px;border:1px solid rgba(255,255,255,.7);border-radius:50%;background:rgba(0,0,0,.25);color:#fff;font-size:30px;line-height:1;display:grid;place-items:center;cursor:pointer}
+.design-lightbox-close:hover{background:#fff;color:#111}
+body.lightbox-open{overflow:hidden}
+@media(max-width:700px){.design-lightbox{padding:3vh 3vw}.design-lightbox img{max-width:94vw;max-height:88vh}.design-lightbox-close{top:12px;right:12px;width:38px;height:38px}}
