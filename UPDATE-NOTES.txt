@@ -1,14 +1,11 @@
-PORTFOLIO CONTACT, BRANDING, AND BANNER UPDATE
+PORTFOLIO VISUAL UPDATE
 
-WHAT CHANGED
-- Removed the old “INDEPENDENT CREATIVE PORTFOLIO” label and replaced it with “MOVING IMAGES BY STEPHEN WOOD”.
-- Kept “PORTFOLIO — 2026”.
-- Added the banner configured in the music archive admin to the main portfolio page, above the hero text.
-- Tightened the space above the homepage hero text.
-- Reused the logo uploaded in the music archive admin across the homepage, music page, graphic design page, and admin header (falls back to the same SW. text logo if no custom logo is uploaded).
-- Removed the old multidisciplinary-practice paragraph.
-- Added a minimalist contact row for phone and email, plus small social icons for SoundCloud, Spotify, YouTube, Instagram, TikTok, and Bandcamp at the bottom of each public page.
-- Kept the existing music archive, design categories, project manager, API, and R2 configuration intact.
+Changes in this update:
+- Homepage banner now uses the same 260px maximum desktop size as the music page, with contain sizing to prevent cropping.
+- Removed the line above the banner by removing the homepage header bottom border.
+- Removed the “MOVING IMAGES BY STEPHEN WOOD” eyebrow and “Sound meets visual form.” headline.
+- Removed the descriptive sentence under the headline; the PORTFOLIO — 2026 label remains.
+- Adjusted spacing around the banner and portfolio label.
+- Enlarged social-icon hit areas and fixed the SoundCloud SVG path so its strokes no longer touch the viewBox edge.
 
-DEPLOY
-Replace matching files in the existing GitHub repository while preserving folder structure, then commit and push. Keep existing Cloudflare secrets, R2 bucket bindings, MEDIA_BASE, and production settings unchanged.
+Install by replacing the corresponding files in the existing GitHub repository, preserving folder structure, then commit and push. Keep existing Cloudflare secrets, R2 settings, and production configuration.
