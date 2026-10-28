@@ -1,21 +1,14 @@
-PORTFOLIO + MUSIC ROUTING UPDATE
+PORTFOLIO CONTACT, BRANDING, AND BANNER UPDATE
 
 WHAT CHANGED
-- The site root (/) is now a minimalist portfolio cover page.
-- The existing music archive is now served at /music/ using the same music archive CSS and JS.
-- Graphic design portfolio is at /design/ with sections for Posters, Logos, Album artwork, and Motion graphics.
-- The private /admin/ page includes a portfolio manager to add, edit metadata, replace media, and delete design projects.
-- Design media accepts common image formats plus MP4, WebM, and MOV video. Uploaded projects and metadata are stored in the existing R2 bucket using design.json.
-- Existing track admin, track data, site logo/banner, and R2 bucket binding are preserved.
+- Removed the old “INDEPENDENT CREATIVE PORTFOLIO” label and replaced it with “MOVING IMAGES BY STEPHEN WOOD”.
+- Kept “PORTFOLIO — 2026”.
+- Added the banner configured in the music archive admin to the main portfolio page, above the hero text.
+- Tightened the space above the homepage hero text.
+- Reused the logo uploaded in the music archive admin across the homepage, music page, graphic design page, and admin header (falls back to the same SW. text logo if no custom logo is uploaded).
+- Removed the old multidisciplinary-practice paragraph.
+- Added a minimalist contact row for phone and email, plus small social icons for SoundCloud, Spotify, YouTube, Instagram, TikTok, and Bandcamp at the bottom of each public page.
+- Kept the existing music archive, design categories, project manager, API, and R2 configuration intact.
 
 DEPLOY
-1. Replace matching project files in your existing GitHub repository with these files, preserving folders.
-2. Commit and push to trigger Cloudflare deployment.
-3. Confirm the custom domain is attached to the Cloudflare Pages/Worker project. Then /, /music/, /design/, and /admin/ should be available under that domain.
-4. Open /admin/, enter the same ADMIN_PASSWORD secret, and use the new Portfolio / Graphic Design section to add work.
-
-IMPORTANT
-- Do not change your existing Cloudflare secrets, R2 bucket, or MEDIA_BASE settings.
-- This ZIP includes the existing wrangler.jsonc for context; keep your production settings if they differ.
-- Media file size limits depend on your Worker/Cloudflare plan and upload configuration.
-- Change the sample contact email hello@swood-noise.com in public/index.html and public/design/index.html if you want a different contact address.
+Replace matching files in the existing GitHub repository while preserving folder structure, then commit and push. Keep existing Cloudflare secrets, R2 bucket bindings, MEDIA_BASE, and production settings unchanged.

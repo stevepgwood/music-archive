@@ -10,7 +10,7 @@ ul{list-style:none;padding:0}li{display:flex;justify-content:space-between;align
 @media(max-width:600px){.row{grid-template-columns:1fr}li{align-items:flex-start;flex-direction:column}li .actions{align-self:flex-end}}
 select{border:0;border-bottom:1px solid var(--black);background:transparent;padding:8px 0;font:14px "Space Grotesk",sans-serif;color:var(--black);border-radius:0}#design-form{margin-top:24px}</style></head>
 <body>
-<header class="topbar"><a class="wordmark" href="/">ARCHIVE<span>.</span></a><div class="top-meta"><span>ADMIN</span></div></header>
+<header class="topbar"><a class="wordmark" href="/" aria-label="Portfolio home">SW<span>.</span></a><div class="top-meta"><span>ADMIN</span></div></header>
 <main>
   <section class="intro" style="padding:56px 0 40px"><p class="eyebrow">UPLOAD</p><h1 style="font-size:48px">New track.</h1>
   <form id="f">
@@ -161,4 +161,5 @@ $("design-form").addEventListener("submit",async e=>{e.preventDefault();const bt
 $("design-list").addEventListener("click",async e=>{const id=e.target.dataset.designEdit;if(id){const p=(window.designCache||[]).find(x=>x.id===id);if(!p)return;editingDesignId=id;$("design-title").value=p.title||"";$("design-category").value=p.category;$("design-year").value=p.year||"";$("design-description").value=p.description||"";$("design-media").required=false;$("design-thumbnail").dataset.clear="false";$("design-save").textContent="SAVE CHANGES";$("design-cancel").hidden=false;designMsg.textContent="EDITING PROJECT — CHOOSE A NEW FILE ONLY IF YOU WANT TO REPLACE THE CURRENT MEDIA.";$("design-manager").scrollIntoView({behavior:"smooth"});return;}const del=e.target.dataset.designDelete;if(del&&confirm("Delete this design project and its uploaded media?")){const r=await fetch("/api/design/"+del,{method:"DELETE",headers:headers()});const j=await r.json().catch(()=>({}));designMsg.textContent=r.ok?"PROJECT DELETED.":String(j.error||"DELETE FAILED").toUpperCase();await loadDesignAdmin();}});
 $("design-cancel").addEventListener("click",()=>{editingDesignId=null;$("design-form").reset();$("design-media").required=true;$("design-save").textContent="ADD PROJECT";$("design-cancel").hidden=true;designMsg.textContent="";});
 loadDesignAdmin();
-</script></body></html>
+</script><script src="/site-chrome.js"></script>
+</body></html>

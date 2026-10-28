@@ -106,7 +106,7 @@ document.querySelector(".track-header").addEventListener("click",e=>{
 populateGenres();render();
 // Custom logo/banner uploaded from /admin/ (falls back to the text version).
 fetch("/api/site").then(r=>r.ok?r.json():{}).then(s=>{
-  if(s.logo){const a=document.querySelector(".wordmark");a.textContent="";const i=document.createElement("img");i.className="logo-img";i.src=s.logo;i.alt="Archive";a.appendChild(i);}
+  if(s.logo){const a=document.querySelector(".wordmark");a.textContent="";const i=document.createElement("img");i.className="logo-img";i.src=s.logo;i.alt="Stephen Wood";a.appendChild(i);}
   if(s.banner){const b=$("banner");b.src=s.banner;b.hidden=false;document.querySelector(".intro").classList.add("has-banner");}
 }).catch(()=>{});
 // Load real tracks from the backend; falls back to the demo tracks if there is no server.
