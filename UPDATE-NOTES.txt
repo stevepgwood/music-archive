@@ -1,0 +1,21 @@
+PORTFOLIO + MUSIC ROUTING UPDATE
+
+WHAT CHANGED
+- The site root (/) is now a minimalist portfolio cover page.
+- The existing music archive is now served at /music/ using the same music archive CSS and JS.
+- Graphic design portfolio is at /design/ with sections for Posters, Logos, Album artwork, and Motion graphics.
+- The private /admin/ page includes a portfolio manager to add, edit metadata, replace media, and delete design projects.
+- Design media accepts common image formats plus MP4, WebM, and MOV video. Uploaded projects and metadata are stored in the existing R2 bucket using design.json.
+- Existing track admin, track data, site logo/banner, and R2 bucket binding are preserved.
+
+DEPLOY
+1. Replace matching project files in your existing GitHub repository with these files, preserving folders.
+2. Commit and push to trigger Cloudflare deployment.
+3. Confirm the custom domain is attached to the Cloudflare Pages/Worker project. Then /, /music/, /design/, and /admin/ should be available under that domain.
+4. Open /admin/, enter the same ADMIN_PASSWORD secret, and use the new Portfolio / Graphic Design section to add work.
+
+IMPORTANT
+- Do not change your existing Cloudflare secrets, R2 bucket, or MEDIA_BASE settings.
+- This ZIP includes the existing wrangler.jsonc for context; keep your production settings if they differ.
+- Media file size limits depend on your Worker/Cloudflare plan and upload configuration.
+- Change the sample contact email hello@swood-noise.com in public/index.html and public/design/index.html if you want a different contact address.

@@ -4,6 +4,8 @@ const writeTracks=(env,t)=>env.BUCKET.put("tracks.json",JSON.stringify(t),{httpM
 
 const readSite=async env=>{const o=await env.BUCKET.get("site.json");return o?o.json():{}};
 const writeSite=(env,s)=>env.BUCKET.put("site.json",JSON.stringify(s),{httpMetadata:{contentType:"application/json"}});
+const readDesign=async env=>{const o=await env.BUCKET.get("design.json");return o?o.json():[]};
+const writeDesign=(env,p)=>env.BUCKET.put("design.json",JSON.stringify(p),{httpMetadata:{contentType:"application/json"}});
 // If MEDIA_BASE is set (public R2 address), audio/artwork URLs point straight at R2 instead of through the Worker.
 const mediaUrl=(env,u)=>{if(!u)return "";const b=(env.MEDIA_BASE||"").trim().replace(/\/$/,"");return b?b+u.slice(6):u};
 const pub=(env,t)=>({...t,audio:mediaUrl(env,t.audio),artwork:mediaUrl(env,t.artwork),download:t.audio?"/download/"+t.audio.slice(7):""});
@@ -15,9 +17,10 @@ async function isAdmin(request,env){
   return crypto.subtle.timingSafeEqual(a,b);
 }
 
-const IMG={jpg:"image/jpeg",jpeg:"image/jpeg",png:"image/png",webp:"image/webp",gif:"image/gif"};
+const IMG={jpg:"image/jpeg",jpeg:"image/jpeg",png:"image/png",webp:"image/webp",gif:"image/gif",svg:"image/svg+xml"};
+const DESIGN_MEDIA={...IMG,mp4:"video/mp4",webm:"video/webm",mov:"video/quicktime"};
 const KINDS={audio:{mp3:"audio/mpeg",wav:"audio/wav",flac:"audio/flac",m4a:"audio/mp4",aac:"audio/aac",ogg:"audio/ogg"},
-  art:IMG,site:IMG};
+  art:IMG,site:IMG,design:DESIGN_MEDIA};
 
 // Streams the raw file body straight into R2 (no buffering in memory).
 async function upload(request,env,url){
@@ -25,6 +28,7 @@ async function upload(request,env,url){
   const type=KINDS[kind]&&KINDS[kind][ext];
   if(!type||!request.body)return json({error:"Unsupported or empty file."},400);
   if(kind==="site"&&!["logo","banner"].includes(name))return json({error:"Bad image name."},400);
+  if(kind==="design"&&ext==="svg")return json({error:"SVG uploads are not supported for project media."},400);
   const key=kind==="site"?`site/${name}-${crypto.randomUUID()}.${ext}`:`${kind}/${crypto.randomUUID()}.${ext}`;
   await env.BUCKET.put(key,request.body,{httpMetadata:{contentType:type,cacheControl:"public, max-age=31536000, immutable"}});
   if(kind==="site"){const st=await readSite(env);if(st[name])await env.BUCKET.delete(st[name].slice(7));st[name]="/media/"+key;await writeSite(env,st);}
@@ -92,9 +96,31 @@ async function removeTrack(env,id){
   await writeTracks(env,tracks.filter(x=>x!==t));return json({ok:true});
 }
 
-// Public file server for uploaded audio/artwork, with Range support so seeking works in the player.
+
+const DESIGN_CATEGORIES=new Set(["posters","logos","album-artwork","motion-graphics"]);
+async function addDesign(request,env){
+  const b=await request.json().catch(()=>({})),s=v=>String(v??"").trim();
+  if(!s(b.title)||!DESIGN_CATEGORIES.has(b.category)||!/^design\/[\w.-]+$/.test(b.media||"")||!await env.BUCKET.head(b.media))return json({error:"A title, valid category, and uploaded media file are required."},400);
+  if(b.thumbnail&&(!/^design\/[\w.-]+$/.test(b.thumbnail)||!await env.BUCKET.head(b.thumbnail)))return json({error:"Thumbnail file is missing or invalid."},400);
+  const items=await readDesign(env),item={id:crypto.randomUUID(),title:s(b.title),category:b.category,description:s(b.description),year:s(b.year),order:Number(b.order)||0,media:"/media/"+b.media,thumbnail:b.thumbnail?"/media/"+b.thumbnail:"",mediaType:s(b.mediaType)};
+  items.push(item);await writeDesign(env,items);return json(item);
+}
+async function updateDesign(request,env,id){
+  const b=await request.json().catch(()=>({})),items=await readDesign(env),p=items.find(x=>x.id===id);if(!p)return json({error:"Project not found."},404);
+  const old=[p.media,p.thumbnail],s=v=>String(v??"").trim();
+  for(const k of ["title","description","year","mediaType"]){if(b[k]!==undefined)p[k]=s(b[k]);}
+  if(b.category!==undefined){if(!DESIGN_CATEGORIES.has(b.category))return json({error:"Invalid category."},400);p.category=b.category;}
+  if(b.order!==undefined)p.order=Number(b.order)||0;
+  if(b.media!==undefined){if(!/^design\/[\w.-]+$/.test(b.media)||!await env.BUCKET.head(b.media))return json({error:"Replacement media file is missing or invalid."},400);p.media="/media/"+b.media;}
+  if(b.thumbnail!==undefined){if(b.thumbnail&&(!/^design\/[\w.-]+$/.test(b.thumbnail)||!await env.BUCKET.head(b.thumbnail)))return json({error:"Thumbnail file is missing or invalid."},400);p.thumbnail=b.thumbnail?"/media/"+b.thumbnail:"";}
+  if(!p.title)return json({error:"A title is required."},400);await writeDesign(env,items);
+  const used=new Set(items.flatMap(x=>[x.media,x.thumbnail]).filter(Boolean).map(u=>u.replace("/media/","")));for(const u of old)if(u&&u.startsWith("/media/")&&!used.has(u.slice(7)))await env.BUCKET.delete(u.slice(7));return json(p);
+}
+async function removeDesign(env,id){const items=await readDesign(env),p=items.find(x=>x.id===id);if(!p)return json({error:"Project not found."},404);await writeDesign(env,items.filter(x=>x.id!==id));const used=new Set(items.filter(x=>x!==p).flatMap(x=>[x.media,x.thumbnail]).filter(Boolean).map(u=>u.replace("/media/","")));for(const u of [p.media,p.thumbnail])if(u&&u.startsWith("/media/")&&!used.has(u.slice(7)))await env.BUCKET.delete(u.slice(7));return json({ok:true});}
+
+// Public file server for uploaded audio/artwork/design media, with Range support.
 async function media(request,env,key){
-  if(!/^(audio|art|site)\/[\w.-]+$/.test(key))return new Response("Not found",{status:404});
+  if(!/^(audio|art|site|design)\/[\w.-]+$/.test(key))return new Response("Not found",{status:404});
   const obj=await env.BUCKET.get(key,{range:request.headers});
   if(!obj)return new Response("Not found",{status:404});
   const h=new Headers();obj.writeHttpMetadata(h);
@@ -115,6 +141,7 @@ export default {
     if(m==="GET"){
       if(path==="/api/tracks")return json((await readTracks(env)).map(t=>pub(env,t)),200,{"cache-control":"no-cache"});
       if(path==="/api/site"){const st=await readSite(env);return json({logo:mediaUrl(env,st.logo),banner:mediaUrl(env,st.banner)},200,{"cache-control":"no-cache"});}
+      if(path==="/api/design")return json((await readDesign(env)).map(p=>({...p,media:mediaUrl(env,p.media),thumbnail:mediaUrl(env,p.thumbnail)})),200,{"cache-control":"no-cache"});
       if(path.startsWith("/media/"))return media(request,env,path.slice(7));
       if(path.startsWith("/download/"))return download(env,path.slice(10));
     }
@@ -123,6 +150,10 @@ export default {
       if(!await isAdmin(request,env))return json({error:"Wrong password."},401);
       if(path==="/api/upload"&&m==="PUT")return upload(request,env,url);
       if(path==="/api/tracks"&&m==="POST")return addTrack(request,env);
+      if(path==="/api/design"&&m==="POST")return addDesign(request,env);
+      const designRoute=/^\/api\/design\/([\w-]+)$/.exec(path);
+      if(designRoute&&m==="PUT")return updateDesign(request,env,designRoute[1]);
+      if(designRoute&&m==="DELETE")return removeDesign(env,designRoute[1]);
       const trackRoute=/^\/api\/tracks\/(\d+)$/.exec(path);
       if(trackRoute&&m==="PUT")return updateTrack(request,env,Number(trackRoute[1]));
       if(trackRoute&&m==="DELETE")return removeTrack(env,Number(trackRoute[1]));

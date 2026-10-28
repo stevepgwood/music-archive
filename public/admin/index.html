@@ -8,7 +8,7 @@ input{border:0;border-bottom:1px solid var(--black);background:transparent;paddi
 #msg,#batch-msg,#msg2{font:11px "DM Mono",monospace;line-height:1.7}.help{font:11px "DM Mono",monospace;color:var(--gray);line-height:1.7;margin:-6px 0 16px}
 ul{list-style:none;padding:0}li{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding:12px 0;font-size:14px}li .actions{display:flex;gap:14px;flex:none}li .text-button{margin:0}.section-rule{border:0;border-top:1px solid var(--black);margin:40px 0 32px}.subheading{font-size:34px;letter-spacing:-.05em;margin:12px 0 0}.go:disabled{opacity:.5;cursor:wait}
 @media(max-width:600px){.row{grid-template-columns:1fr}li{align-items:flex-start;flex-direction:column}li .actions{align-self:flex-end}}
-</style></head>
+select{border:0;border-bottom:1px solid var(--black);background:transparent;padding:8px 0;font:14px "Space Grotesk",sans-serif;color:var(--black);border-radius:0}#design-form{margin-top:24px}</style></head>
 <body>
 <header class="topbar"><a class="wordmark" href="/">ARCHIVE<span>.</span></a><div class="top-meta"><span>ADMIN</span></div></header>
 <main>
@@ -44,6 +44,18 @@ ul{list-style:none;padding:0}li{display:flex;justify-content:space-between;align
   <div class="row"><button class="text-button" data-rm="logo" type="button" style="margin:0;text-align:left">REMOVE LOGO</button><button class="text-button" data-rm="banner" type="button" style="margin:0;text-align:left">REMOVE BANNER</button></div><p id="msg2" role="status"></p></div></section>
 
   <hr class="section-rule"><section><p class="eyebrow">LIBRARY</p><h2 class="subheading">Manage tracks.</h2><ul id="list"></ul></section>
+
+  <hr class="section-rule"><section id="design-manager"><p class="eyebrow">PORTFOLIO / GRAPHIC DESIGN</p><h2 class="subheading">Manage visual work.</h2>
+    <p class="help">Add posters, logos, album artwork, or motion graphics. Images and MP4/WebM/MOV videos are supported. Projects appear automatically in their matching section on the public design page.</p>
+    <form id="design-form">
+      <label>PROJECT TITLE *<input id="design-title" required></label>
+      <div class="row"><label>CATEGORY *<select id="design-category" required><option value="posters">Posters</option><option value="logos">Logos</option><option value="album-artwork">Album artwork</option><option value="motion-graphics">Motion graphics</option></select></label><label>YEAR<input id="design-year" inputmode="numeric" placeholder="2026"></label></div>
+      <label>DESCRIPTION<input id="design-description" placeholder="Client, project context, tools, or details"></label>
+      <div class="row"><label>PROJECT MEDIA *<input id="design-media" type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime" required></label><label>VIDEO POSTER / IMAGE THUMBNAIL (OPTIONAL)<input id="design-thumbnail" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label></div>
+      <button class="go" id="design-save" type="submit">ADD PROJECT</button><button class="text-button" id="design-cancel" type="button" hidden>CANCEL EDIT</button><p id="design-msg" role="status"></p>
+    </form><h3 class="subheading" style="font-size:24px">Published projects</h3><ul id="design-list"></ul>
+  </section>
+
 </main>
 <script>
 const $=id=>document.getElementById(id);
@@ -138,4 +150,15 @@ document.querySelectorAll("[data-rm]").forEach(b=>b.addEventListener("click",asy
   const r=await fetch("/api/site/"+b.dataset.rm,{method:"DELETE",headers:headers()});
   $("msg2").textContent=r.ok?"REMOVED.":"WRONG PASSWORD OR REMOVE FAILED.";
 }));
+
+let editingDesignId=null;const dcat={posters:"POSTERS",logos:"LOGOS","album-artwork":"ALBUM ARTWORK","motion-graphics":"MOTION GRAPHICS"};
+const designMsg=$("design-msg");
+function extOf(f){return f.name.split(".").pop().toLowerCase();}
+function mediaTypeOf(f){return f.type||({mp4:"video/mp4",webm:"video/webm",mov:"video/quicktime"}[extOf(f)]||"image/"+extOf(f));}
+async function loadDesignAdmin(){const r=await fetch("/api/design",{cache:"no-store"});if(!r.ok){$("design-list").innerHTML="<li>COULD NOT LOAD PROJECTS — CHECK PASSWORD.</li>";return;}const items=await r.json();window.designCache=items;$("design-list").innerHTML=items.map(p=>`<li><span><strong>${esc(p.title)}</strong><br><small>${esc(dcat[p.category]||p.category)} · ${esc(p.year||"No year")}</small></span><div class="actions"><button class="text-button" type="button" data-design-edit="${esc(p.id)}">EDIT</button><button class="text-button" type="button" data-design-delete="${esc(p.id)}">DELETE</button></div></li>`).join("")||"<li>NO DESIGN PROJECTS YET</li>";}
+$("design-form").addEventListener("submit",async e=>{e.preventDefault();const btn=$("design-save");btn.disabled=true;try{const mediaFile=$("design-media").files[0],thumbFile=$("design-thumbnail").files[0];let body={title:$("design-title").value,category:$("design-category").value,year:$("design-year").value,description:$("design-description").value};if(mediaFile){body.media=await put("design",mediaFile,"",designMsg);body.mediaType=mediaTypeOf(mediaFile);}else if(!editingDesignId)throw new Error("Choose a project image or video.");if(thumbFile)body.thumbnail=await put("design",thumbFile,"",designMsg);else if(editingDesignId&&$("design-thumbnail").dataset.clear==="true")body.thumbnail="";
+ const r=await fetch(editingDesignId?"/api/design/"+editingDesignId:"/api/design",{method:editingDesignId?"PUT":"POST",headers:{...headers(),"content-type":"application/json"},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||"Could not save project.");try{sessionStorage.setItem("pw",$("pw").value)}catch{}$("design-form").reset();$("design-media").required=true;editingDesignId=null;$("design-save").textContent="ADD PROJECT";$("design-cancel").hidden=true;$("design-msg").textContent="PROJECT SAVED.";await loadDesignAdmin();}catch(err){designMsg.textContent=String(err.message).toUpperCase();}finally{btn.disabled=false;}});
+$("design-list").addEventListener("click",async e=>{const id=e.target.dataset.designEdit;if(id){const p=(window.designCache||[]).find(x=>x.id===id);if(!p)return;editingDesignId=id;$("design-title").value=p.title||"";$("design-category").value=p.category;$("design-year").value=p.year||"";$("design-description").value=p.description||"";$("design-media").required=false;$("design-thumbnail").dataset.clear="false";$("design-save").textContent="SAVE CHANGES";$("design-cancel").hidden=false;designMsg.textContent="EDITING PROJECT — CHOOSE A NEW FILE ONLY IF YOU WANT TO REPLACE THE CURRENT MEDIA.";$("design-manager").scrollIntoView({behavior:"smooth"});return;}const del=e.target.dataset.designDelete;if(del&&confirm("Delete this design project and its uploaded media?")){const r=await fetch("/api/design/"+del,{method:"DELETE",headers:headers()});const j=await r.json().catch(()=>({}));designMsg.textContent=r.ok?"PROJECT DELETED.":String(j.error||"DELETE FAILED").toUpperCase();await loadDesignAdmin();}});
+$("design-cancel").addEventListener("click",()=>{editingDesignId=null;$("design-form").reset();$("design-media").required=true;$("design-save").textContent="ADD PROJECT";$("design-cancel").hidden=true;designMsg.textContent="";});
+loadDesignAdmin();
 </script></body></html>
