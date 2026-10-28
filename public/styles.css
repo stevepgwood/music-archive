@@ -53,7 +53,7 @@ h1{font-size:clamp(48px,8.5vw,118px);line-height:.92;letter-spacing:-.085em;marg
 [aria-sort=ascending] .sort-btn::after{content:" ↑"}[aria-sort=descending] .sort-btn::after{content:" ↓"}
 .row-dl{display:grid;place-items:center;border:1px solid var(--black);width:30px;height:30px;border-radius:50%;font-size:12px;grid-column:8}.row-dl:hover{background:var(--black);color:var(--white)}
 .logo-img{display:block;height:44px;width:auto}
-.banner{display:block;width:100%;height:auto;max-height:260px;object-fit:cover}.banner[hidden]{display:none}
+.banner{display:block;width:100%;height:auto;max-height:260px;object-fit:contain;object-position:center;margin:0 auto}.banner[hidden]{display:none}
 .has-banner{padding:0;border:0}.has-banner .eyebrow,.has-banner .intro-copy{display:none}.has-banner h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
 body:has(.has-banner) .topbar{border-bottom:0}
 @media(max-width:760px){

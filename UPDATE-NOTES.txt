@@ -9,3 +9,10 @@ Changes in this update:
 - Enlarged social-icon hit areas and fixed the SoundCloud SVG path so its strokes no longer touch the viewBox edge.
 
 Install by replacing the corresponding files in the existing GitHub repository, preserving folder structure, then commit and push. Keep existing Cloudflare secrets, R2 settings, and production configuration.
+
+
+MUSIC BANNER FIT UPDATE
+
+- Music archive banner now uses contain sizing like the homepage banner, so its top and bottom are not cropped on wide desktop windows.
+- Desktop banner keeps the 260px maximum height; mobile keeps its full-width natural aspect ratio.
+- No Cloudflare configuration, secrets, or R2 settings were changed.
