@@ -16,3 +16,12 @@ MUSIC BANNER FIT UPDATE
 - Music archive banner now uses contain sizing like the homepage banner, so its top and bottom are not cropped on wide desktop windows.
 - Desktop banner keeps the 260px maximum height; mobile keeps its full-width natural aspect ratio.
 - No Cloudflare configuration, secrets, or R2 settings were changed.
+
+ADMIN EDIT / DELETE FIX
+
+- Hardened track and graphic-design edit/delete click handling by locating the actual action button with closest().
+- Added visible progress and success/error messages for save and delete actions.
+- Added error handling around design deletion and safer ID encoding in API requests.
+- No Cloudflare secrets, Worker configuration, R2 bucket, or stored content was changed.
+
+For this fix, replace only public/admin/index.html in the existing GitHub repository, then commit and push.

@@ -121,23 +121,38 @@ $("batch-form").addEventListener("submit",async e=>{
     await load();
   }finally{button.disabled=false;}
 });
+// Use closest() rather than reading dataset from the raw event target so clicks
+// on button text/inner elements always trigger the correct admin action.
 $("list").addEventListener("click",async e=>{
-  const edit=e.target.dataset.edit;
-  if(edit){
-    const t=(window.trackCache||[]).find(x=>String(x.id)===String(edit));if(!t)return;
+  const editButton=e.target.closest("button[data-edit]");
+  const deleteButton=e.target.closest("button[data-id]");
+  if(!editButton&&!deleteButton)return;
+  e.preventDefault();
+  if(editButton){
+    const edit=editButton.dataset.edit;
+    const t=(window.trackCache||[]).find(x=>String(x.id)===String(edit));
+    if(!t){$("msg").textContent="TRACK NOT FOUND. REFRESHING LIST…";await load();return;}
     const title=prompt("Track title:",t.title);if(title===null)return;
     const artist=prompt("Artist:",t.artist||"");if(artist===null)return;
     const genre=prompt("Genre:",t.genre||"");if(genre===null)return;
     const bpm=prompt("BPM (leave blank if unknown):",t.bpm||"");if(bpm===null)return;
     const key=prompt("Key:",t.key||"");if(key===null)return;
     const date=prompt("Release date (YYYY-MM-DD):",t.date||"");if(date===null)return;
-    try{await saveTrack({title,artist,genre,bpm,key,date},edit);$("msg").textContent="TRACK UPDATED.";await load();}
-    catch(err){$("msg").textContent=String(err.message).toUpperCase();}
+    $("msg").textContent="SAVING TRACK CHANGES…";
+    try{await saveTrack({title,artist,genre,bpm,key,date},edit);$("msg").textContent="TRACK UPDATED SUCCESSFULLY.";await load();}
+    catch(err){$("msg").textContent=String(err.message||"TRACK UPDATE FAILED").toUpperCase();}
     return;
   }
-  const id=e.target.dataset.id;if(!id||!confirm("Delete this track and its files?"))return;
-  const r=await fetch("/api/tracks/"+id,{method:"DELETE",headers:headers()});
-  if(!r.ok){const j=await r.json().catch(()=>({}));$("msg").textContent=(j.error||"DELETE FAILED").toUpperCase();}else $("msg").textContent="TRACK DELETED.";await load();
+  const id=deleteButton.dataset.id;
+  if(!id||!confirm("Delete this track and its files?"))return;
+  $("msg").textContent="DELETING TRACK…";
+  try{
+    const r=await fetch("/api/tracks/"+encodeURIComponent(id),{method:"DELETE",headers:headers()});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(j.error||`Delete failed (${r.status})`);
+    $("msg").textContent="TRACK DELETED SUCCESSFULLY.";
+    await load();
+  }catch(err){$("msg").textContent=String(err.message||"DELETE FAILED").toUpperCase();}
 });
 load();
 $("site-go").addEventListener("click",async()=>{
@@ -158,7 +173,39 @@ function mediaTypeOf(f){return f.type||({mp4:"video/mp4",webm:"video/webm",mov:"
 async function loadDesignAdmin(){const r=await fetch("/api/design",{cache:"no-store"});if(!r.ok){$("design-list").innerHTML="<li>COULD NOT LOAD PROJECTS — CHECK PASSWORD.</li>";return;}const items=await r.json();window.designCache=items;$("design-list").innerHTML=items.map(p=>`<li><span><strong>${esc(p.title)}</strong><br><small>${esc(dcat[p.category]||p.category)} · ${esc(p.year||"No year")}</small></span><div class="actions"><button class="text-button" type="button" data-design-edit="${esc(p.id)}">EDIT</button><button class="text-button" type="button" data-design-delete="${esc(p.id)}">DELETE</button></div></li>`).join("")||"<li>NO DESIGN PROJECTS YET</li>";}
 $("design-form").addEventListener("submit",async e=>{e.preventDefault();const btn=$("design-save");btn.disabled=true;try{const mediaFile=$("design-media").files[0],thumbFile=$("design-thumbnail").files[0];let body={title:$("design-title").value,category:$("design-category").value,year:$("design-year").value,description:$("design-description").value};if(mediaFile){body.media=await put("design",mediaFile,"",designMsg);body.mediaType=mediaTypeOf(mediaFile);}else if(!editingDesignId)throw new Error("Choose a project image or video.");if(thumbFile)body.thumbnail=await put("design",thumbFile,"",designMsg);else if(editingDesignId&&$("design-thumbnail").dataset.clear==="true")body.thumbnail="";
  const r=await fetch(editingDesignId?"/api/design/"+editingDesignId:"/api/design",{method:editingDesignId?"PUT":"POST",headers:{...headers(),"content-type":"application/json"},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||"Could not save project.");try{sessionStorage.setItem("pw",$("pw").value)}catch{}$("design-form").reset();$("design-media").required=true;editingDesignId=null;$("design-save").textContent="ADD PROJECT";$("design-cancel").hidden=true;$("design-msg").textContent="PROJECT SAVED.";await loadDesignAdmin();}catch(err){designMsg.textContent=String(err.message).toUpperCase();}finally{btn.disabled=false;}});
-$("design-list").addEventListener("click",async e=>{const id=e.target.dataset.designEdit;if(id){const p=(window.designCache||[]).find(x=>x.id===id);if(!p)return;editingDesignId=id;$("design-title").value=p.title||"";$("design-category").value=p.category;$("design-year").value=p.year||"";$("design-description").value=p.description||"";$("design-media").required=false;$("design-thumbnail").dataset.clear="false";$("design-save").textContent="SAVE CHANGES";$("design-cancel").hidden=false;designMsg.textContent="EDITING PROJECT — CHOOSE A NEW FILE ONLY IF YOU WANT TO REPLACE THE CURRENT MEDIA.";$("design-manager").scrollIntoView({behavior:"smooth"});return;}const del=e.target.dataset.designDelete;if(del&&confirm("Delete this design project and its uploaded media?")){const r=await fetch("/api/design/"+del,{method:"DELETE",headers:headers()});const j=await r.json().catch(()=>({}));designMsg.textContent=r.ok?"PROJECT DELETED.":String(j.error||"DELETE FAILED").toUpperCase();await loadDesignAdmin();}});
+$("design-list").addEventListener("click",async e=>{
+  const editButton=e.target.closest("button[data-design-edit]");
+  const deleteButton=e.target.closest("button[data-design-delete]");
+  if(!editButton&&!deleteButton)return;
+  e.preventDefault();
+  if(editButton){
+    const id=editButton.dataset.designEdit;
+    const p=(window.designCache||[]).find(x=>String(x.id)===String(id));
+    if(!p){designMsg.textContent="PROJECT NOT FOUND. REFRESHING LIST…";await loadDesignAdmin();return;}
+    editingDesignId=id;
+    $("design-title").value=p.title||"";
+    $("design-category").value=p.category||"posters";
+    $("design-year").value=p.year||"";
+    $("design-description").value=p.description||"";
+    $("design-media").required=false;
+    $("design-thumbnail").dataset.clear="false";
+    $("design-save").textContent="SAVE CHANGES";
+    $("design-cancel").hidden=false;
+    designMsg.textContent="EDITING PROJECT — CHOOSE A NEW FILE ONLY IF YOU WANT TO REPLACE THE CURRENT MEDIA.";
+    $("design-manager").scrollIntoView({behavior:"smooth"});
+    return;
+  }
+  const del=deleteButton.dataset.designDelete;
+  if(!del||!confirm("Delete this design project and its uploaded media?"))return;
+  designMsg.textContent="DELETING PROJECT…";
+  try{
+    const r=await fetch("/api/design/"+encodeURIComponent(del),{method:"DELETE",headers:headers()});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(j.error||`Delete failed (${r.status})`);
+    designMsg.textContent="PROJECT DELETED SUCCESSFULLY.";
+    await loadDesignAdmin();
+  }catch(err){designMsg.textContent=String(err.message||"DELETE FAILED").toUpperCase();}
+});
 $("design-cancel").addEventListener("click",()=>{editingDesignId=null;$("design-form").reset();$("design-media").required=true;$("design-save").textContent="ADD PROJECT";$("design-cancel").hidden=true;designMsg.textContent="";});
 loadDesignAdmin();
 </script><script src="/site-chrome.js"></script>
