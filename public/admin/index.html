@@ -8,7 +8,7 @@ input{border:0;border-bottom:1px solid var(--black);background:transparent;paddi
 #msg,#batch-msg,#msg2{font:11px "DM Mono",monospace;line-height:1.7}.help{font:11px "DM Mono",monospace;color:var(--gray);line-height:1.7;margin:-6px 0 16px}
 ul{list-style:none;padding:0}li{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding:12px 0;font-size:14px}li .actions{display:flex;gap:14px;flex:none}li .text-button{margin:0}.section-rule{border:0;border-top:1px solid var(--black);margin:40px 0 32px}.subheading{font-size:34px;letter-spacing:-.05em;margin:12px 0 0}.go:disabled{opacity:.5;cursor:wait}
 @media(max-width:600px){.row{grid-template-columns:1fr}li{align-items:flex-start;flex-direction:column}li .actions{align-self:flex-end}}
-select{border:0;border-bottom:1px solid var(--black);background:transparent;padding:8px 0;font:14px "Space Grotesk",sans-serif;color:var(--black);border-radius:0}#design-form{margin-top:24px}</style></head>
+[hidden]{display:none!important}select{border:0;border-bottom:1px solid var(--black);background:transparent;padding:8px 0;font:14px "Space Grotesk",sans-serif;color:var(--black);border-radius:0}#design-form{margin-top:24px}</style></head>
 <body>
 <header class="topbar"><a class="wordmark" href="/" aria-label="Portfolio home">SW<span>.</span></a><div class="top-meta"><span>ADMIN</span></div></header>
 <main>
@@ -43,7 +43,20 @@ select{border:0;border-bottom:1px solid var(--black);background:transparent;padd
   </div><button class="go" id="site-go" type="button">UPLOAD IMAGES</button>
   <div class="row"><button class="text-button" data-rm="logo" type="button" style="margin:0;text-align:left">REMOVE LOGO</button><button class="text-button" data-rm="banner" type="button" style="margin:0;text-align:left">REMOVE BANNER</button></div><p id="msg2" role="status"></p></div></section>
 
-  <hr class="section-rule"><section><p class="eyebrow">LIBRARY</p><h2 class="subheading">Manage tracks.</h2><ul id="list"></ul></section>
+  <hr class="section-rule"><section><p class="eyebrow">LIBRARY</p><h2 class="subheading">Manage tracks.</h2><ul id="list"></ul>
+    <form id="track-edit-form" hidden>
+      <h3 class="subheading" style="font-size:24px">Edit track.</h3>
+      <label>TITLE *<input id="edit-title" required></label>
+      <div class="row"><label>ARTIST<input id="edit-artist"></label><label>GENRE<input id="edit-genre"></label></div>
+      <div class="row"><label>BPM<input id="edit-bpm" type="number" min="1" max="400"></label><label>KEY<input id="edit-key"></label></div>
+      <label>RELEASE DATE<input id="edit-date" type="date"></label>
+      <label>REPLACE AUDIO FILE (OPTIONAL)<input id="edit-audio" type="file" accept="audio/*,.mp3,.wav,.flac,.m4a,.aac,.ogg"></label>
+      <label>REPLACE ALBUM ARTWORK (OPTIONAL)<input id="edit-artwork" type="file" accept="image/*,.jpg,.jpeg,.png,.webp,.gif"></label>
+      <label style="display:flex;align-items:center;gap:8px"><input id="edit-remove-artwork" type="checkbox" style="width:auto"> REMOVE CURRENT ALBUM ARTWORK</label>
+      <div class="row"><button class="go" id="edit-track-save" type="submit">SAVE TRACK CHANGES</button><button class="text-button" id="edit-track-cancel" type="button" style="margin:0">CANCEL</button></div>
+      <p id="edit-track-msg" role="status"></p>
+    </form>
+  </section>
 
   <hr class="section-rule"><section id="design-manager"><p class="eyebrow">PORTFOLIO / GRAPHIC DESIGN</p><h2 class="subheading">Manage visual work.</h2>
     <p class="help">Add posters, logos, album artwork, or motion graphics. Images and MP4/WebM/MOV videos are supported. Projects appear automatically in their matching section on the public design page.</p>
@@ -121,27 +134,43 @@ $("batch-form").addEventListener("submit",async e=>{
     await load();
   }finally{button.disabled=false;}
 });
-// Use closest() rather than reading dataset from the raw event target so clicks
-// on button text/inner elements always trigger the correct admin action.
+// Track editor supports metadata, replacing the audio file, and replacing/removing artwork.
+let editingTrackId=null;
+function resetTrackEditor(){editingTrackId=null;$("track-edit-form").hidden=true;$("track-edit-form").reset();$("edit-track-msg").textContent="";}
+$("edit-track-cancel").addEventListener("click",resetTrackEditor);
+$("track-edit-form").addEventListener("submit",async e=>{
+  e.preventDefault();if(editingTrackId===null)return;
+  const button=$("edit-track-save"),status=$("edit-track-msg");button.disabled=true;
+  try{
+    const body={title:$("edit-title").value,artist:$("edit-artist").value,genre:$("edit-genre").value,bpm:$("edit-bpm").value,key:$("edit-key").value,date:$("edit-date").value};
+    const audioFile=$("edit-audio").files[0],artFile=$("edit-artwork").files[0];
+    if(audioFile){status.textContent="UPLOADING REPLACEMENT AUDIO…";body.audio=await put("audio",audioFile,"",status);}
+    if(artFile){status.textContent="UPLOADING REPLACEMENT ARTWORK…";body.artwork=await put("art",artFile,"",status);}
+    else if($("edit-remove-artwork").checked)body.artwork="";
+    status.textContent="SAVING TRACK CHANGES…";
+    await saveTrack(body,editingTrackId);
+    status.textContent="TRACK, AUDIO, AND ARTWORK SETTINGS SAVED.";
+    await load();
+    resetTrackEditor();
+    $("msg").textContent="TRACK UPDATED SUCCESSFULLY.";
+  }catch(err){status.textContent=String(err.message||"TRACK UPDATE FAILED").toUpperCase();}
+  finally{button.disabled=false;}
+});
 $("list").addEventListener("click",async e=>{
   const editButton=e.target.closest("button[data-edit]");
   const deleteButton=e.target.closest("button[data-id]");
   if(!editButton&&!deleteButton)return;
   e.preventDefault();
   if(editButton){
-    const edit=editButton.dataset.edit;
-    const t=(window.trackCache||[]).find(x=>String(x.id)===String(edit));
+    const id=editButton.dataset.edit;
+    const t=(window.trackCache||[]).find(x=>String(x.id)===String(id));
     if(!t){$("msg").textContent="TRACK NOT FOUND. REFRESHING LIST…";await load();return;}
-    const title=prompt("Track title:",t.title);if(title===null)return;
-    const artist=prompt("Artist:",t.artist||"");if(artist===null)return;
-    const genre=prompt("Genre:",t.genre||"");if(genre===null)return;
-    const bpm=prompt("BPM (leave blank if unknown):",t.bpm||"");if(bpm===null)return;
-    const key=prompt("Key:",t.key||"");if(key===null)return;
-    const date=prompt("Release date (YYYY-MM-DD):",t.date||"");if(date===null)return;
-    $("msg").textContent="SAVING TRACK CHANGES…";
-    try{await saveTrack({title,artist,genre,bpm,key,date},edit);$("msg").textContent="TRACK UPDATED SUCCESSFULLY.";await load();}
-    catch(err){$("msg").textContent=String(err.message||"TRACK UPDATE FAILED").toUpperCase();}
-    return;
+    editingTrackId=id;
+    $("edit-title").value=t.title||"";$("edit-artist").value=t.artist||"";$("edit-genre").value=t.genre||"";
+    $("edit-bpm").value=t.bpm||"";$("edit-key").value=t.key||"";$("edit-date").value=t.date||"";
+    $("edit-audio").value="";$("edit-artwork").value="";$("edit-remove-artwork").checked=false;
+    $("track-edit-form").hidden=false;$("edit-track-msg").textContent="EDITING: "+(t.title||"TRACK").toUpperCase()+". CHOOSE FILES ONLY IF YOU WANT TO REPLACE THEM.";
+    $("track-edit-form").scrollIntoView({behavior:"smooth",block:"start"});$("edit-title").focus();return;
   }
   const id=deleteButton.dataset.id;
   if(!id||!confirm("Delete this track and its files?"))return;
@@ -151,6 +180,7 @@ $("list").addEventListener("click",async e=>{
     const j=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(j.error||`Delete failed (${r.status})`);
     $("msg").textContent="TRACK DELETED SUCCESSFULLY.";
+    if(String(editingTrackId)===String(id))resetTrackEditor();
     await load();
   }catch(err){$("msg").textContent=String(err.message||"DELETE FAILED").toUpperCase();}
 });
