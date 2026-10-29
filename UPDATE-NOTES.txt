@@ -25,3 +25,10 @@ ADMIN EDIT / DELETE FIX
 - No Cloudflare secrets, Worker configuration, R2 bucket, or stored content was changed.
 
 For this fix, replace only public/admin/index.html in the existing GitHub repository, then commit and push.
+
+
+LATEST UPDATE — PAGE TITLES AND FOOTER GIF SLOT
+- Browser tab titles are now: swood | home, swood | music, and swood | visual.
+- A responsive footer GIF slot has been added to the right of the contact/social links on the home, music, and visual pages.
+- To display your own animation, add your GIF file to public/footer.gif (exact filename). If no GIF is present, the slot hides itself.
+- Existing Worker, secrets, R2 bucket, and production configuration are unchanged.

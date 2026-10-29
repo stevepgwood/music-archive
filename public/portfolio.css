@@ -21,3 +21,11 @@
 .design-lightbox-close:hover{background:#fff;color:#111}
 body.lightbox-open{overflow:hidden}
 @media(max-width:700px){.design-lightbox{padding:3vh 3vw}.design-lightbox img{max-width:94vw;max-height:88vh}.design-lightbox-close{top:12px;right:12px;width:38px;height:38px}}
+
+
+/* Footer animation slot: place a GIF named footer.gif in public/ */
+.footer-main-row{display:flex;align-items:center;justify-content:space-between;gap:28px}
+.footer-info{min-width:0;flex:1}
+.footer-gif{display:block;width:48px;height:48px;flex:0 0 48px;object-fit:contain;image-rendering:auto}
+.footer-info .social-icons{margin-top:26px}
+@media(max-width:700px){.footer-main-row{align-items:center;gap:16px}.footer-info{min-width:0}.footer-gif{width:42px;height:42px;flex-basis:42px}.footer-info .footer-contact{align-items:flex-start;flex-direction:column}.footer-info .social-icons{margin-top:24px;flex-wrap:wrap}}
