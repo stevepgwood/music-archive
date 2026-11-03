@@ -32,3 +32,11 @@ LATEST UPDATE — PAGE TITLES AND FOOTER GIF SLOT
 - A responsive footer GIF slot has been added to the right of the contact/social links on the home, music, and visual pages.
 - To display your own animation, add your GIF file to public/footer.gif (exact filename). If no GIF is present, the slot hides itself.
 - Existing Worker, secrets, R2 bucket, and production configuration are unchanged.
+
+SECRET GAME LINK UPDATE
+- The footer GIF on the home, music, and visual pages is now clickable and links to https://stevepgwood.github.io/PLUR/.
+- The GIF remains visually unchanged; its link has an accessible label and keyboard focus indicator.
+- Clicking it opens the game in the same tab.
+- Keep the GIF at public/footer.gif. No Worker, secrets, R2 bucket, or production settings were changed.
+
+Install by replacing public/index.html, public/music/index.html, public/design/index.html, public/portfolio.css, and public/styles.css, then commit and push.

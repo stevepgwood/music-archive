@@ -24,8 +24,11 @@ body.lightbox-open{overflow:hidden}
 
 
 /* Footer animation slot: place a GIF named footer.gif in public/ */
+.footer-game-link{display:block;width:48px;height:48px;flex:0 0 48px;line-height:0;cursor:pointer}
+.footer-game-link:focus-visible{outline:1px solid currentColor;outline-offset:5px}
+.footer-game-link .footer-gif{width:100%;height:100%}
 .footer-main-row{display:flex;align-items:center;justify-content:space-between;gap:28px}
 .footer-info{min-width:0;flex:1}
 .footer-gif{display:block;width:48px;height:48px;flex:0 0 48px;object-fit:contain;image-rendering:auto}
 .footer-info .social-icons{margin-top:26px}
-@media(max-width:700px){.footer-main-row{align-items:center;gap:16px}.footer-info{min-width:0}.footer-gif{width:42px;height:42px;flex-basis:42px}.footer-info .footer-contact{align-items:flex-start;flex-direction:column}.footer-info .social-icons{margin-top:24px;flex-wrap:wrap}}
+@media(max-width:700px){.footer-main-row{align-items:center;gap:16px}.footer-info{min-width:0}.footer-game-link{width:42px;height:42px;flex-basis:42px}.footer-gif{width:42px;height:42px;flex-basis:42px}.footer-info .footer-contact{align-items:flex-start;flex-direction:column}.footer-info .social-icons{margin-top:24px;flex-wrap:wrap}}
